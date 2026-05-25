@@ -93,7 +93,7 @@ La especificacion de referencia es `DOCUMENTACION-COMPLETA.md`. No hay codigo le
 | Socket.IO Client | 4.x |
 | Luxon | 3.x |
 | SweetAlert2 | 11 |
-| Bootstrap | 5.3 |
+| Tailwind CSS | 4 |
 | Vitest | 3.x |
 | ESLint | 10 |
 

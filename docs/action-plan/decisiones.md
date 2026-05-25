@@ -8,7 +8,7 @@
 
 ## ADR-001 — Bootstrap 5.3 en lugar de Tailwind CSS 4
 
-**Estado:** Aceptado
+**Estado:** Supersedido por ADR-008 (2026-05-25)
 
 **Fecha:** 2026-05-25
 
@@ -30,6 +30,8 @@ Usar Bootstrap 5.3 para esta migracion. Se instala como paquete npm (`bootstrap@
 - Positivas: migracion mas rapida, menor riesgo de divergencia visual con el legacy.
 - Negativas: bundle de CSS mas pesado (~20KB gzip), menor flexibilidad para el tema de `TimerView`.
 - Deuda creada: migracion a Tailwind en v2 documentada en `tech-debt.md` (Deuda 7).
+
+**Nota de supersesion:** Esta decision fue revisada el 2026-05-25. El equipo decidio adoptar Tailwind CSS 4 desde la v1, eliminando la deuda tecnica anticipada. Ver ADR-008.
 
 ---
 
@@ -175,3 +177,81 @@ El socket se instancia una sola vez en `src/services/socketClient.ts` via el pat
 
 - Positivas: sin listeners duplicados, sin fugas de memoria, comportamiento predecible del countdown.
 - Negativas: el singleton hace el testing del socket mas complejo (hay que mockear `getSocket()` en los tests).
+
+---
+
+## ADR-008 — Tailwind CSS 4 en lugar de Bootstrap 5.3
+
+**Estado:** Aceptado
+
+**Fecha:** 2026-05-25
+
+**Supersede:** ADR-001
+
+**Contexto:**
+
+ADR-001 eligio Bootstrap 5.3 priorizando velocidad de migracion y equivalencia de clases con el legacy. Al planificar el trabajo en equipo con tres desarrolladores en paralelo, el equipo reviso esta decision por dos razones:
+
+1. La vista `TimerView` requiere un tema oscuro completamente personalizado (fondo negro, texto de countdown en tamanio extremo, cambio de color dinamico al minuto). Bootstrap no tiene soporte nativo para esto sin sobrescribir sus variables CSS extensivamente.
+2. Tailwind CSS 4 adopta arquitectura CSS nativa (sin `tailwind.config.js`): la configuracion se define en el propio CSS con `@theme`. El tiempo de aprendizaje estimado para un equipo con experiencia en CSS moderno es de medio dia, no varios dias como en versiones anteriores de Tailwind.
+
+El argumento principal de ADR-001 (velocidad de migracion) queda mitigado por el hecho de que la app se construye desde cero — no hay clases Bootstrap del legacy que "migrar": hay que escribir todos los estilos de cero de todas formas.
+
+Adicionalmente, Bootstrap 5.3 fue registrado como Deuda 7 en `tech-debt.md` (migracion a Tailwind en v2). Adoptar Tailwind ahora elimina esa deuda antes de que exista.
+
+**Decision:**
+
+Usar Tailwind CSS 4 como sistema de estilos para toda la app. Bootstrap 5.3 no se instala.
+
+Configuracion:
+
+```bash
+npm install tailwindcss @tailwindcss/vite
+```
+
+En `vite.config.ts`, anadir el plugin de Tailwind junto al de React:
+
+```typescript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  plugins: [
+    tailwindcss(),
+    react({
+      babel: {
+        plugins: [['babel-plugin-react-compiler', {}]],
+      },
+    }),
+  ],
+})
+```
+
+En `src/main.tsx` (o en un `src/styles/global.css` importado desde `main.tsx`):
+
+```css
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #1a1a2e;
+  --color-brand-accent: #e94560;
+  --color-timer-warning: #ef4444;
+}
+```
+
+No se usa `tailwind.config.js` — la configuracion es exclusivamente CSS nativo via `@theme`.
+
+Se usa el sistema de `<dialog>` nativo para modales (identico a lo declarado en ADR-001 para Bootstrap).
+
+**Consecuencias:**
+
+- Positivas:
+  - Bundle de CSS minimo (solo clases usadas, sin reset de Bootstrap de ~20KB gzip).
+  - Tema oscuro de `TimerView` con `@theme` sin sobrescribir variables de terceros.
+  - Deuda 7 de `tech-debt.md` eliminada antes de nacer.
+  - Compatible con React Compiler: las clases Tailwind son strings estaticos, sin impacto en la memoizacion automatica.
+- Negativas:
+  - No hay componentes prehechos (botones, tablas, formularios): hay que escribir las clases desde cero en cada vista CRUD.
+  - El equipo debe acordar tokens de color y espaciado antes de que Dev A (Fase 4) y Dev B (Fase 5) trabajen en paralelo para evitar inconsistencia visual. Ver PI-3 en `team-split.md`.
+- Deuda eliminada: Deuda 7 de `tech-debt.md` queda cerrada con esta decision.
