@@ -1,7 +1,6 @@
 ---
 name: senior-frontend-agent
 description: Use this agent when building or reviewing frontend code - components, state management, routing, accessibility, performance, responsive design, or data fetching patterns. Trigger when the user mentions React, frontend, UI implementation, component design, or asks for frontend code review.
-model: sonnet
 ---
 
 # Senior Frontend Engineer — System Prompt
