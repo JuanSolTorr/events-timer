@@ -1,27 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+@import "tailwindcss";
 
-:root {
+@theme {
+  --color-primary:          #1D4ED8;
+  --color-primary-hover:    #1E40AF;
+  --color-primary-subtle:   #DBEAFE;
+
+  --color-bg-dark:          #0F172A;
+  --color-bg-dark-surface:  #1E293B;
+
+  --color-warning:          #F59E0B;
+  --color-warning-strong:   #D97706;
+
+  --color-text-primary:     #F1F5F9;
+  --color-text-secondary:   #94A3B8;
+  --color-text-on-primary:  #FFFFFF;
+
+  --color-success:          #16A34A;
+  --color-error:            #DC2626;
+  --color-info:             #0284C7;
+
+  --color-bg-admin:         #F8FAFC;
+  --color-bg-admin-card:    #FFFFFF;
+  --color-border:           #E2E8F0;
+
   --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
-  color-scheme: dark;
 }
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: var(--font-sans);
-  background-color: #0d0e12;
-  color: #f3f4f6;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-}
-
-#root {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-}
-

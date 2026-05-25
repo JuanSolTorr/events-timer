@@ -10,11 +10,11 @@
 
 | Fase | Archivo | Estado | Criterio de salida |
 |---|---|---|---|
-| 0 — Auditoría | `fase-0-auditoria.md` | Pendiente | 5 docs de `docs auditoria/` leídos; endpoints, modelos y eventos conocidos |
-| 1 — Infraestructura | `fase-1-infraestructura.md` | Pendiente | `npm run build` y `npm run lint` sin errores |
-| 2 — Servicios | `fase-2-servicios.md` | Pendiente | `npm run build` sin `any` en `src/services/` |
-| 3 — Contextos | `fase-3-contextos.md` | Pendiente | Socket instanciado una sola vez; `useAuth` y `useTimerState` disponibles |
-| 4 — Vistas CRUD | `fase-4-vistas-crud.md` | Pendiente | 6 vistas funcionales contra API de testing |
+| 0 — Auditoría | `fase-0-auditoria.md` | Completada | 5 docs de `docs auditoria/` leídos; endpoints, modelos y eventos conocidos |
+| 1 — Infraestructura | `fase-1-infraestructura.md` | Completada | `npm run build` y `npm run lint` sin errores |
+| 2 — Servicios | `fase-2-servicios.md` | Completada | `npm run build` sin `any` en `src/services/` |
+| 3 — Contextos | `fase-3-contextos.md` | Completada | Socket instanciado una sola vez; `useAuth` y `useTimerState` disponibles |
+| 4 — Vistas CRUD | `fase-4-vistas-crud.md` | Completada | 6 vistas funcionales contra API de testing |
 | 5 — TimerView | `fase-5-timer-view.md` | Pendiente | Countdown en tiempo real; cambio de color al minuto |
 | 6 — Calidad | `fase-6-calidad.md` | Pendiente | Cobertura > 60% en utils/ y services/; Lighthouse A11y > 85 |
 
@@ -93,7 +93,7 @@ La especificacion de referencia es `DOCUMENTACION-COMPLETA.md`. No hay codigo le
 | Socket.IO Client | 4.x |
 | Luxon | 3.x |
 | SweetAlert2 | 11 |
-| Bootstrap | 5.3 |
+| Tailwind CSS | 4 |
 | Vitest | 3.x |
 | ESLint | 10 |
 

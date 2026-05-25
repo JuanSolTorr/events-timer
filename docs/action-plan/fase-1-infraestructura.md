@@ -85,14 +85,16 @@ Verificar que `vite.config.js` se llame `vite.config.ts` (si no, renombrarlo tam
 Rename-Item vite.config.js vite.config.ts
 ```
 
-Actualizar `vite.config.ts` para soporte de TypeScript y React Compiler:
+Actualizar `vite.config.ts` para soporte de TypeScript, React Compiler y Tailwind CSS 4:
 
 ```typescript
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react({
       babel: {
         plugins: [
@@ -103,6 +105,8 @@ export default defineConfig({
   ],
 })
 ```
+
+> Nota: en Tailwind CSS v4 el plugin `@tailwindcss/vite` es todo-en-uno. No se usa `tailwindcss` + `postcss` como en v3. El plugin debe ir antes de `react()` en el array.
 
 Instalar el React Compiler:
 
@@ -162,7 +166,13 @@ if (!config.socketUrl) throw new Error('VITE_SOCKET_URL no esta definida')
 Instalar todas las dependencias en un solo comando:
 
 ```bash
-npm install react-router-dom@7 axios@1 socket.io-client@4 luxon@3 sweetalert2@11 bootstrap@5.3
+npm install react-router-dom@7 axios@1 socket.io-client@4 luxon@3 sweetalert2@11
+```
+
+Instalar Tailwind CSS 4 y su plugin de Vite:
+
+```bash
+npm install tailwindcss @tailwindcss/vite
 ```
 
 Instalar tipos necesarios:
@@ -171,11 +181,19 @@ Instalar tipos necesarios:
 npm install --save-dev @types/luxon
 ```
 
-Importar Bootstrap en `src/main.tsx` (antes del render de React):
+Crear o reemplazar `src/index.css` con la directiva de importacion de Tailwind v4 y los tokens de tema del proyecto (ver seccion "Tokens de color" al final de este archivo):
 
-```typescript
-import 'bootstrap/dist/css/bootstrap.min.css'
+```css
+@import "tailwindcss";
+
+@theme {
+  /* tokens del proyecto — ver seccion al final */
+}
 ```
+
+> Nota: Tailwind CSS v4 no usa `@tailwind base;`, `@tailwind components;` ni `@tailwind utilities;`. La unica directiva necesaria es `@import "tailwindcss";`. La personalizacion del tema se hace en el bloque `@theme { }` dentro del CSS, no en `tailwind.config.js` (que ya no es necesario en v4).
+
+Asegurarse de que `src/index.css` se importa en `src/main.tsx` (ver Paso 1.6).
 
 ---
 
@@ -322,7 +340,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import { router } from './router'
-import 'bootstrap/dist/css/bootstrap.min.css'
+import './index.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -330,6 +348,8 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>
 )
 ```
+
+> Se importa `./index.css` (que contiene `@import "tailwindcss"`) en lugar de la hoja de Bootstrap. Tailwind v4 inyecta sus estilos base, componentes y utilidades a traves de ese unico `@import`.
 
 ---
 
@@ -368,6 +388,85 @@ npm run dev     # debe arrancar en http://localhost:5173
 Navegar a `http://localhost:5173` → debe mostrar "TimerView — placeholder".
 Navegar a `http://localhost:5173/login` → debe mostrar "Login — placeholder".
 Navegar a `http://localhost:5173/salas` → debe redirigir a `/login` (no hay token).
+
+---
+
+## Tokens de color (propuesta inicial)
+
+> Estos tokens son **placeholders profesionales** propuestos para el proyecto. Deben revisarse y aprobarse con los responsables del producto antes de la Fase 5 (TimerView). Si existen colores de marca oficiales de Tajamar, sustituir los valores hex por los correspondientes.
+
+El bloque `@theme` va en `src/index.css`, despues de `@import "tailwindcss";`:
+
+```css
+@import "tailwindcss";
+
+@theme {
+  /* -------------------------------------------------------
+     Color primario
+     Azul corporativo de alta confianza. Usado en botones
+     de accion principal, cabeceras de admin y acentos de UI.
+     Contraste sobre blanco: 4.6:1 (pasa WCAG AA normal).
+  ------------------------------------------------------- */
+  --color-primary:         #1D4ED8; /* blue-700 Tailwind */
+  --color-primary-hover:   #1E40AF; /* blue-800 — estado hover/activo */
+  --color-primary-subtle:  #DBEAFE; /* blue-100 — fondos suaves, badges */
+
+  /* -------------------------------------------------------
+     Fondo oscuro TimerView
+     Negro azulado que reduce fatiga visual en sala grande
+     con proyector o pantalla de 40"+. Alto contraste con
+     texto blanco (ratio > 15:1).
+  ------------------------------------------------------- */
+  --color-bg-dark:         #0F172A; /* slate-900 Tailwind */
+  --color-bg-dark-surface: #1E293B; /* slate-800 — cards/paneles sobre fondo */
+
+  /* -------------------------------------------------------
+     Warning ultimo minuto
+     Ambar saturado visible en sala con luz ambiente variable.
+     Se combina siempre con icono y texto (no solo color)
+     para cumplir WCAG 1.4.1.
+     Contraste sobre bg-dark: 8.1:1 (pasa WCAG AAA).
+  ------------------------------------------------------- */
+  --color-warning:         #F59E0B; /* amber-400 Tailwind */
+  --color-warning-strong:  #D97706; /* amber-500 — variante mas intensa si hace falta */
+
+  /* -------------------------------------------------------
+     Texto principal
+     Blanco ligeramente suavizado para reducir halos en
+     pantalla oscura. Contraste sobre bg-dark: 14.7:1.
+  ------------------------------------------------------- */
+  --color-text-primary:    #F1F5F9; /* slate-100 Tailwind */
+  --color-text-secondary:  #94A3B8; /* slate-400 — metadatos, etiquetas secundarias */
+  --color-text-on-primary: #FFFFFF; /* texto sobre botones de color primario */
+
+  /* -------------------------------------------------------
+     Estados semanticos (formularios y tablas de admin)
+     Se usan junto a icono y texto, nunca solo por color.
+  ------------------------------------------------------- */
+  --color-success:         #16A34A; /* green-600 */
+  --color-error:           #DC2626; /* red-600 */
+  --color-info:            #0284C7; /* sky-600 */
+
+  /* -------------------------------------------------------
+     Fondos de administracion (vistas CRUD)
+     Fondo claro neutro para no competir con los datos.
+  ------------------------------------------------------- */
+  --color-bg-admin:        #F8FAFC; /* slate-50 */
+  --color-bg-admin-card:   #FFFFFF;
+  --color-border:          #E2E8F0; /* slate-200 */
+}
+```
+
+Razonamiento de cada decision:
+
+| Token | Valor | Justificacion |
+|---|---|---|
+| `--color-primary` | `#1D4ED8` | Azul institucional de alta legibilidad. Contraste AA sobre blanco y sobre `bg-admin-card`. |
+| `--color-bg-dark` | `#0F172A` | Slate-900: negro con matiz frio. Reduce fatiga en proyeccion larga. Evita el negro puro que genera halos en LCD. |
+| `--color-warning` | `#F59E0B` | Ambar-400: visible con luz ambiental sin llegar a rojo (que se confundiria con error). Ratio > 8:1 sobre fondo oscuro. |
+| `--color-text-primary` | `#F1F5F9` | Slate-100: blanco suavizado. Reduce el contraste extremo blanco puro / negro puro que fatiga en sesiones largas. |
+
+Para usar los tokens en clases de Tailwind, en v4 los custom properties de `@theme` se convierten automaticamente en clases utilitarias: `bg-[--color-bg-dark]`, `text-[--color-warning]`, o directamente como valores de CSS custom property en estilos en linea cuando la clase utilitaria no existe todavia.
 
 ---
 
