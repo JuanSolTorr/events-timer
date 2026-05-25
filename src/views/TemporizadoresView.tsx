@@ -1,0 +1,165 @@
+import { use, useState, useOptimistic, useActionState, Suspense, useCallback } from 'react'
+import { DateTime } from 'luxon'
+import Swal from 'sweetalert2'
+import {
+  getTemporizadores,
+  getCategorias,
+  postTemporizador,
+  putTemporizador,
+  deleteTemporizador,
+} from '../services/service'
+import { ahora, parseTimerInicio } from '../utils/timezone'
+import { SubmitButton } from '../components/SubmitButton'
+import type { Timer, Categoria } from '../types'
+
+interface FormState {
+  error: string | null
+}
+
+function esFechaFutura(value: string): boolean {
+  return DateTime.fromISO(value) > ahora()
+}
+
+function formatInicio(isoString: string): string {
+  return parseTimerInicio(isoString).toFormat('dd/MM/yyyy HH:mm')
+}
+
+function TemporizadoresContent({
+  promise,
+  onRefresh,
+}: {
+  promise: Promise<[Timer[], Categoria[]]>
+  onRefresh: () => void
+}) {
+  const [timers, categorias] = use(promise)
+  const [editando, setEditando] = useState<Timer | null>(null)
+  const [optimisticTimers, removeOptimistic] = useOptimistic(
+    [...timers].sort((a, b) =>
+      parseTimerInicio(a.inicio) < parseTimerInicio(b.inicio) ? -1 : 1
+    ),
+    (state, id: number) => state.filter((t) => t.idTemporizador !== id)
+  )
+
+  const formAction = useCallback(
+    async (_prev: FormState, formData: FormData): Promise<FormState> => {
+      const inicio = formData.get('inicio') as string
+      const idCategoria = Number(formData.get('idCategoria'))
+
+      if (!esFechaFutura(inicio)) return { error: 'La fecha de inicio debe ser futura' }
+
+      try {
+        if (editando) {
+          await putTemporizador({ ...editando, inicio, idCategoria })
+        } else {
+          await postTemporizador({ inicio, idCategoria, pausa: false })
+        }
+        setEditando(null)
+        onRefresh()
+        return { error: null }
+      } catch {
+        return { error: 'Error al guardar el temporizador' }
+      }
+    },
+    [editando, onRefresh]
+  )
+
+  const [state, dispatchForm] = useActionState(formAction, { error: null })
+
+  const handleDelete = async (id: number) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar temporizador?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+    })
+    if (!result.isConfirmed) return
+    removeOptimistic(id)
+    await deleteTemporizador(id)
+    onRefresh()
+  }
+
+  const defaultInicio = editando
+    ? parseTimerInicio(editando.inicio).toFormat("yyyy-MM-dd'T'HH:mm")
+    : ''
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Temporizadores</h1>
+
+      <form action={dispatchForm} className="flex flex-col gap-3 mb-8 p-4 border rounded bg-slate-50">
+        <h2 className="font-semibold">{editando ? 'Editar temporizador' : 'Nuevo temporizador'}</h2>
+        <div className="flex gap-3 flex-wrap">
+          <input
+            key={editando?.idTemporizador ?? 'new'}
+            name="inicio"
+            type="datetime-local"
+            defaultValue={defaultInicio}
+            required
+            className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+          />
+          <select
+            name="idCategoria"
+            defaultValue={editando?.idCategoria ?? ''}
+            required
+            className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+          >
+            <option value="">Categoría...</option>
+            {categorias.map((cat) => (
+              <option key={cat.idCategoria} value={cat.idCategoria}>
+                {cat.categoria} ({cat.duracion} min)
+              </option>
+            ))}
+          </select>
+          <SubmitButton label={editando ? 'Actualizar' : 'Crear'} />
+          {editando && (
+            <button type="button" onClick={() => setEditando(null)} className="px-3 py-2 border rounded hover:bg-slate-200">
+              Cancelar
+            </button>
+          )}
+        </div>
+        {state.error && <p role="alert" className="text-red-600 text-sm">{state.error}</p>}
+      </form>
+
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr className="bg-slate-100">
+            <th className="text-left p-2 border">Inicio</th>
+            <th className="text-left p-2 border">Categoría</th>
+            <th className="text-left p-2 border">Pausa</th>
+            <th className="p-2 border">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {optimisticTimers.map((timer) => {
+            const cat = categorias.find((c) => c.idCategoria === timer.idCategoria)
+            return (
+              <tr key={timer.idTemporizador} className="hover:bg-slate-50">
+                <td className="p-2 border">{formatInicio(timer.inicio)}</td>
+                <td className="p-2 border">{cat?.categoria ?? timer.idCategoria}</td>
+                <td className="p-2 border">{timer.pausa ? 'Sí' : 'No'}</td>
+                <td className="p-2 border text-center">
+                  <button onClick={() => setEditando(timer)} className="text-blue-700 hover:underline mr-3 text-xs">Editar</button>
+                  <button onClick={() => handleDelete(timer.idTemporizador)} className="text-red-600 hover:underline text-xs">Eliminar</button>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+export function TemporizadoresView() {
+  const [promise, setPromise] = useState<Promise<[Timer[], Categoria[]]>>(
+    () => Promise.all([getTemporizadores(), getCategorias()])
+  )
+  const refresh = () => setPromise(Promise.all([getTemporizadores(), getCategorias()]))
+
+  return (
+    <Suspense fallback={<p className="p-4">Cargando temporizadores...</p>}>
+      <TemporizadoresContent promise={promise} onRefresh={refresh} />
+    </Suspense>
+  )
+}
