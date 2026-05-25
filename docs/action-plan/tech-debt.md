@@ -144,14 +144,12 @@ Pero la funcion `panic()` **no esta definida** en ningun lugar del archivo. Si e
 
 ---
 
-## Deuda 7 — Migracion a Tailwind CSS 4 (Baja)
+## Deuda 7 — Migracion a Tailwind CSS 4 (Baja) — CERRADA
 
-**Descripcion:** La decision de usar Bootstrap 5.3 en lugar de Tailwind CSS 4 fue tomada para minimizar el esfuerzo de la migracion (ADR-001). Bootstrap anade ~20KB CSS gzip al bundle y requiere clases de Bootstrap en el JSX, que son menos mantenibles que las utilidades de Tailwind.
+**Estado:** Cerrada el 2026-05-25 por ADR-008.
 
-**Impacto:** Bundle mas grande y menor flexibilidad para el tema de la vista `TimerView` (pantalla de proyector requiere modo oscuro personalizado, que con Bootstrap es mas trabajoso).
+**Descripcion original:** La decision de usar Bootstrap 5.3 en lugar de Tailwind CSS 4 fue tomada para minimizar el esfuerzo de la migracion (ADR-001). Bootstrap anade ~20KB CSS gzip al bundle y requiere clases de Bootstrap en el JSX, que son menos mantenibles que las utilidades de Tailwind.
 
-**Accion recomendada:** En una segunda iteracion del proyecto, migrar los estilos a Tailwind CSS 4, empezando por la `TimerView` que es la mas critica visualmente.
+**Resolucion:** El equipo decidio adoptar Tailwind CSS 4 directamente en la v1, eliminando esta deuda antes de que existiera. Ver ADR-008 en `decisiones.md`.
 
-**Responsable:** Equipo de frontend.
-
-**Fecha de deteccion:** 2026-05-25
+**Fecha de cierre:** 2026-05-25
