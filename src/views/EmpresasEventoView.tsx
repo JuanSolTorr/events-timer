@@ -10,6 +10,7 @@ import {
 } from '../services/service'
 import { parseTimerInicio } from '../utils/timezone'
 import { SubmitButton } from '../components/SubmitButton'
+import { useAuth } from '../hooks/useAuth'
 import type { Empresa, Sala, Timer, TimerEvento } from '../types'
 
 type ViewData = [Empresa[], Sala[], Timer[], TimerEvento[]]
@@ -21,9 +22,11 @@ interface FormState {
 function EmpresasEventoContent({
   promise,
   onRefresh,
+  canEdit,
 }: {
   promise: Promise<ViewData>
   onRefresh: () => void
+  canEdit: boolean
 }) {
   const [empresas, salas, timers, timerEventos] = use(promise)
   const [optimisticTE, removeOptimistic] = useOptimistic(
@@ -75,40 +78,41 @@ function EmpresasEventoContent({
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Asignaciones empresa – sala – timer</h1>
-
-      <form action={dispatchForm} className="flex flex-col gap-3 mb-8 p-4 border rounded bg-slate-50">
-        <h2 className="font-semibold">Nueva asignación</h2>
-        <div className="flex gap-3 flex-wrap">
-          <select name="idEmpresa" required className={selectClass} defaultValue="">
-            <option value="">Empresa...</option>
-            {empresas.map((e) => (
-              <option key={e.idEmpresa} value={e.idEmpresa}>{e.empresa}</option>
-            ))}
-          </select>
-          <select name="idSala" required className={selectClass} defaultValue="">
-            <option value="">Sala...</option>
-            {salas.map((s) => (
-              <option key={s.idSala} value={s.idSala}>{s.sala}</option>
-            ))}
-          </select>
-          <select name="idTimer" required className={selectClass} defaultValue="">
-            <option value="">Timer...</option>
-            {timers.map((t) => (
-              <option key={t.idTemporizador} value={t.idTemporizador}>
-                {parseTimerInicio(t.inicio).toFormat('dd/MM HH:mm')}
-              </option>
-            ))}
-          </select>
-          <select name="idEvento" required className={selectClass} defaultValue="">
-            <option value="">Evento...</option>
-            {idEventos.map((te) => (
-              <option key={te.idEvento} value={te.idEvento}>{te.evento}</option>
-            ))}
-          </select>
-          <SubmitButton label="Asignar" />
-        </div>
-        {state.error && <p role="alert" className="text-red-600 text-sm">{state.error}</p>}
-      </form>
+      {canEdit && (
+        <form action={dispatchForm} className="flex flex-col gap-3 mb-8 p-4 border rounded bg-slate-50">
+          <h2 className="font-semibold">Nueva asignación</h2>
+          <div className="flex gap-3 flex-wrap">
+            <select name="idEmpresa" required className={selectClass} defaultValue="">
+              <option value="">Empresa...</option>
+              {empresas.map((e) => (
+                <option key={e.idEmpresa} value={e.idEmpresa}>{e.empresa}</option>
+              ))}
+            </select>
+            <select name="idSala" required className={selectClass} defaultValue="">
+              <option value="">Sala...</option>
+              {salas.map((s) => (
+                <option key={s.idSala} value={s.idSala}>{s.sala}</option>
+              ))}
+            </select>
+            <select name="idTimer" required className={selectClass} defaultValue="">
+              <option value="">Timer...</option>
+              {timers.map((t) => (
+                <option key={t.idTemporizador} value={t.idTemporizador}>
+                  {parseTimerInicio(t.inicio).toFormat('dd/MM HH:mm')}
+                </option>
+              ))}
+            </select>
+            <select name="idEvento" required className={selectClass} defaultValue="">
+              <option value="">Evento...</option>
+              {idEventos.map((te) => (
+                <option key={te.idEvento} value={te.idEvento}>{te.evento}</option>
+              ))}
+            </select>
+            <SubmitButton label="Asignar" />
+          </div>
+          {state.error && <p role="alert" className="text-red-600 text-sm">{state.error}</p>}
+        </form>
+      )}
 
       <table className="w-full text-sm border-collapse">
         <thead>
@@ -117,7 +121,7 @@ function EmpresasEventoContent({
             <th className="text-left p-2 border">Sala</th>
             <th className="text-left p-2 border">Inicio</th>
             <th className="text-left p-2 border">Evento</th>
-            <th className="p-2 border">Acción</th>
+            {canEdit && <th className="p-2 border">Acción</th>}
           </tr>
         </thead>
         <tbody>
@@ -127,11 +131,13 @@ function EmpresasEventoContent({
               <td className="p-2 border">{te.sala}</td>
               <td className="p-2 border">{parseTimerInicio(te.inicio).toFormat('dd/MM HH:mm')}</td>
               <td className="p-2 border">{te.evento}</td>
-              <td className="p-2 border text-center">
-                <button onClick={() => handleDelete(te.uniqueId)} className="text-red-600 hover:underline text-xs">
-                  Eliminar
-                </button>
-              </td>
+              {canEdit && (
+                <td className="p-2 border text-center">
+                  <button onClick={() => handleDelete(te.uniqueId)} className="text-red-600 hover:underline text-xs">
+                    Eliminar
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -141,6 +147,7 @@ function EmpresasEventoContent({
 }
 
 export function EmpresasEventoView() {
+  const { isAuthenticated } = useAuth()
   const [promise, setPromise] = useState<Promise<ViewData>>(
     () => Promise.all([getEmpresas(), getSalas(), getTemporizadores(), getTimersEventos()])
   )
@@ -149,7 +156,7 @@ export function EmpresasEventoView() {
 
   return (
     <Suspense fallback={<p className="p-4">Cargando datos...</p>}>
-      <EmpresasEventoContent promise={promise} onRefresh={refresh} />
+      <EmpresasEventoContent promise={promise} onRefresh={refresh} canEdit={isAuthenticated} />
     </Suspense>
   )
 }
