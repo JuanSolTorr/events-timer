@@ -183,7 +183,7 @@ export async function deleteTemporizador(idTimer: number): Promise<void> {
 }
 
 export async function updateIncreaseTimers(minutes: number): Promise<void> {
-  await httpClient.put(`api/timers/increasetimers/${minutes}`)
+  await httpClient.put(`api/Timers/IncreaseTimers/${minutes}`)
   emitSyncData()
 }
 

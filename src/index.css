@@ -42,20 +42,6 @@
   --color-display-muted: #475569;
 }
 
-[data-theme='dark'] {
-  color-scheme: dark;
-  --color-bg: #0f172a;
-  --color-surface: #111827;
-  --color-surface-muted: #1f2937;
-  --color-border-subtle: #334155;
-  --color-text: #f8fafc;
-  --color-text-muted: #94a3b8;
-  --color-link: #60a5fa;
-  --color-display-bg: #020617;
-  --color-display-surface: #0f172a;
-  --color-display-text: #f8fafc;
-  --color-display-muted: #94a3b8;
-}
 
 body {
   background: var(--color-bg);

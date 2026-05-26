@@ -1,36 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
-type ThemeMode = 'light' | 'dark'
-
-function getInitialTheme(): ThemeMode {
-  try {
-    const stored = localStorage.getItem('theme')
-    if (stored === 'light' || stored === 'dark') return stored
-    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark'
-  } catch {
-    // Ignore storage or matchMedia errors
-  }
-  return 'light'
-}
-
 export function Menu() {
   const { isAuthenticated, logout } = useAuth()
-  const [theme, setTheme] = useState<ThemeMode>(getInitialTheme)
-
   useEffect(() => {
-    document.documentElement.dataset.theme = theme
+    document.documentElement.dataset.theme = ''
     try {
-      localStorage.setItem('theme', theme)
+      localStorage.removeItem('theme')
     } catch {
       // Ignore storage errors
     }
-  }, [theme])
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
-  }
+  }, [])
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[var(--color-border-subtle)] bg-[linear-gradient(115deg,var(--color-surface),var(--color-surface-muted))] text-[var(--color-text)]">
@@ -45,28 +26,21 @@ export function Menu() {
         <NavLink to="/salas" className={({ isActive }) => isActive ? 'rounded-full bg-[var(--color-link)] px-3 py-1 text-white' : 'rounded-full border border-[var(--color-border-subtle)] px-3 py-1 hover:bg-[var(--color-surface-muted)]'}>Salas</NavLink>
         <NavLink to="/empresas" className={({ isActive }) => isActive ? 'rounded-full bg-[var(--color-link)] px-3 py-1 text-white' : 'rounded-full border border-[var(--color-border-subtle)] px-3 py-1 hover:bg-[var(--color-surface-muted)]'}>Empresas</NavLink>
         <NavLink to="/categorias" className={({ isActive }) => isActive ? 'rounded-full bg-[var(--color-link)] px-3 py-1 text-white' : 'rounded-full border border-[var(--color-border-subtle)] px-3 py-1 hover:bg-[var(--color-surface-muted)]'}>Categorías</NavLink>
+        {isAuthenticated && (
+          <NavLink to="/temporizadores" className={({ isActive }) => isActive ? 'rounded-full bg-[var(--color-link)] px-3 py-1 text-white' : 'rounded-full border border-[var(--color-border-subtle)] px-3 py-1 hover:bg-[var(--color-surface-muted)]'}>Temporizadores</NavLink>
+        )}
         <NavLink to="/empresastimersnew" className={({ isActive }) => isActive ? 'rounded-full bg-[var(--color-link)] px-3 py-1 text-white' : 'rounded-full border border-[var(--color-border-subtle)] px-3 py-1 hover:bg-[var(--color-surface-muted)]'}>Seguimiento Empresas</NavLink>
         <NavLink to="/login" className={({ isActive }) => isActive ? 'rounded-full bg-[var(--color-link)] px-3 py-1 text-white' : 'rounded-full border border-[var(--color-border-subtle)] px-3 py-1 hover:bg-[var(--color-surface-muted)]'}>Administrador</NavLink>
       </div>
       <div className="flex-1" />
-      <div className="flex items-center gap-2">
+      {isAuthenticated && (
         <button
-          type="button"
-          onClick={toggleTheme}
-          aria-pressed={theme === 'dark'}
+          onClick={logout}
           className="rounded-full border border-[var(--color-border-subtle)] px-3 py-1 text-sm hover:bg-[var(--color-surface-muted)]"
         >
-          {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+          Salir
         </button>
-        {isAuthenticated && (
-          <button
-            onClick={logout}
-            className="rounded-full border border-[var(--color-border-subtle)] px-3 py-1 text-sm hover:bg-[var(--color-surface-muted)]"
-          >
-            Salir
-          </button>
-        )}
-      </div>
+      )}
       </div>
     </nav>
   )

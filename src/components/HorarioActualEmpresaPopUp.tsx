@@ -37,7 +37,7 @@ export function HorarioActualEmpresaPopUp({
 
       <dialog
         ref={dialogRef}
-        className="rounded-lg p-4 backdrop:bg-black/40 min-w-[320px]"
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg p-4 backdrop:bg-black/40 min-w-[320px]"
       >
         <h2 className="text-lg font-semibold mb-2">{nombreEmpresa}</h2>
         {promise && (

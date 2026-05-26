@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { getSalas, getTimersEventos } from '../services/service'
 import { useTimerState } from '../hooks/useTimerState'
 import { Tiempo } from '../components/Tiempo'
-import { parseTimerInicio, ahora } from '../utils/timezone'
+import { parseTimerInicio } from '../utils/timezone'
 import type { Sala, TimerEvento } from '../types'
 
 const salasPromise = getSalas()
@@ -117,8 +117,7 @@ function TimerContent() {
                 <Tiempo secondsRemaining={secondsRemaining} />
               </div>
               <div className="text-sm text-[var(--color-display-muted)]">
-                Inicio programado:{' '}
-                {parseTimerInicio(eventoActual.inicio).toFormat('HH:mm')}
+                Inicio programado: {parseTimerInicio(eventoActual.inicio).toFormat('HH:mm')}
               </div>
             </div>
           ) : (

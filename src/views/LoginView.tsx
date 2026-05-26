@@ -1,4 +1,5 @@
 import { useActionState, useTransition, useEffect, useCallback } from 'react'
+import Swal from 'sweetalert2'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getSocket } from '../services/socketClient'
@@ -15,7 +16,7 @@ export function LoginView() {
   const [startPending, startTransition] = useTransition()
 
   useEffect(() => {
-    if (isAuthenticated) navigate('/horario')
+    if (isAuthenticated) navigate('/login')
   }, [isAuthenticated, navigate])
 
   const loginAction = useCallback(
@@ -42,7 +43,22 @@ export function LoginView() {
   }
 
   const handleIncrement = async (minutes: number) => {
-    await updateIncreaseTimers(minutes)
+    try {
+      await updateIncreaseTimers(minutes)
+      Swal.fire({
+        icon: 'success',
+        title: 'Timers ajustados',
+        text: `Se han desplazado ${minutes} minutos.`,
+        timer: 1200,
+        showConfirmButton: false,
+      })
+    } catch {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se pudo ajustar',
+        text: 'Revisa la sesión y vuelve a intentarlo.',
+      })
+    }
   }
 
   return (
