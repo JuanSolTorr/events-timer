@@ -10,6 +10,7 @@ import {
 } from '../services/service'
 import { ahora, parseTimerInicio } from '../utils/timezone'
 import { SubmitButton } from '../components/SubmitButton'
+import { useAuth } from '../hooks/useAuth'
 import type { Timer, Categoria } from '../types'
 
 interface FormState {
@@ -27,9 +28,11 @@ function formatInicio(isoString: string): string {
 function TemporizadoresContent({
   promise,
   onRefresh,
+  canEdit,
 }: {
   promise: Promise<[Timer[], Categoria[]]>
   onRefresh: () => void
+  canEdit: boolean
 }) {
   const [timers, categorias] = use(promise)
   const [editando, setEditando] = useState<Timer | null>(null)
@@ -86,40 +89,41 @@ function TemporizadoresContent({
   return (
     <div className="max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Temporizadores</h1>
-
-      <form action={dispatchForm} className="flex flex-col gap-3 mb-8 p-4 border rounded bg-slate-50">
-        <h2 className="font-semibold">{editando ? 'Editar temporizador' : 'Nuevo temporizador'}</h2>
-        <div className="flex gap-3 flex-wrap">
-          <input
-            key={editando?.idTemporizador ?? 'new'}
-            name="inicio"
-            type="datetime-local"
-            defaultValue={defaultInicio}
-            required
-            className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-          />
-          <select
-            name="idCategoria"
-            defaultValue={editando?.idCategoria ?? ''}
-            required
-            className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-          >
-            <option value="">Categoría...</option>
-            {categorias.map((cat) => (
-              <option key={cat.idCategoria} value={cat.idCategoria}>
-                {cat.categoria} ({cat.duracion} min)
-              </option>
-            ))}
-          </select>
-          <SubmitButton label={editando ? 'Actualizar' : 'Crear'} />
-          {editando && (
-            <button type="button" onClick={() => setEditando(null)} className="px-3 py-2 border rounded hover:bg-slate-200">
-              Cancelar
-            </button>
-          )}
-        </div>
-        {state.error && <p role="alert" className="text-red-600 text-sm">{state.error}</p>}
-      </form>
+      {canEdit && (
+        <form action={dispatchForm} className="flex flex-col gap-3 mb-8 p-4 border rounded bg-slate-50">
+          <h2 className="font-semibold">{editando ? 'Editar temporizador' : 'Nuevo temporizador'}</h2>
+          <div className="flex gap-3 flex-wrap">
+            <input
+              key={editando?.idTemporizador ?? 'new'}
+              name="inicio"
+              type="datetime-local"
+              defaultValue={defaultInicio}
+              required
+              className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+            />
+            <select
+              name="idCategoria"
+              defaultValue={editando?.idCategoria ?? ''}
+              required
+              className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+            >
+              <option value="">Categoría...</option>
+              {categorias.map((cat) => (
+                <option key={cat.idCategoria} value={cat.idCategoria}>
+                  {cat.categoria} ({cat.duracion} min)
+                </option>
+              ))}
+            </select>
+            <SubmitButton label={editando ? 'Actualizar' : 'Crear'} />
+            {editando && (
+              <button type="button" onClick={() => setEditando(null)} className="px-3 py-2 border rounded hover:bg-slate-200">
+                Cancelar
+              </button>
+            )}
+          </div>
+          {state.error && <p role="alert" className="text-red-600 text-sm">{state.error}</p>}
+        </form>
+      )}
 
       <table className="w-full text-sm border-collapse">
         <thead>
@@ -127,7 +131,7 @@ function TemporizadoresContent({
             <th className="text-left p-2 border">Inicio</th>
             <th className="text-left p-2 border">Categoría</th>
             <th className="text-left p-2 border">Pausa</th>
-            <th className="p-2 border">Acciones</th>
+            {canEdit && <th className="p-2 border">Acciones</th>}
           </tr>
         </thead>
         <tbody>
@@ -138,10 +142,12 @@ function TemporizadoresContent({
                 <td className="p-2 border">{formatInicio(timer.inicio)}</td>
                 <td className="p-2 border">{cat?.categoria ?? timer.idCategoria}</td>
                 <td className="p-2 border">{timer.pausa ? 'Sí' : 'No'}</td>
-                <td className="p-2 border text-center">
-                  <button onClick={() => setEditando(timer)} className="text-blue-700 hover:underline mr-3 text-xs">Editar</button>
-                  <button onClick={() => handleDelete(timer.idTemporizador)} className="text-red-600 hover:underline text-xs">Eliminar</button>
-                </td>
+                {canEdit && (
+                  <td className="p-2 border text-center">
+                    <button onClick={() => setEditando(timer)} className="text-blue-700 hover:underline mr-3 text-xs">Editar</button>
+                    <button onClick={() => handleDelete(timer.idTemporizador)} className="text-red-600 hover:underline text-xs">Eliminar</button>
+                  </td>
+                )}
               </tr>
             )
           })}
@@ -152,6 +158,7 @@ function TemporizadoresContent({
 }
 
 export function TemporizadoresView() {
+  const { isAuthenticated } = useAuth()
   const [promise, setPromise] = useState<Promise<[Timer[], Categoria[]]>>(
     () => Promise.all([getTemporizadores(), getCategorias()])
   )
@@ -159,7 +166,7 @@ export function TemporizadoresView() {
 
   return (
     <Suspense fallback={<p className="p-4">Cargando temporizadores...</p>}>
-      <TemporizadoresContent promise={promise} onRefresh={refresh} />
+      <TemporizadoresContent promise={promise} onRefresh={refresh} canEdit={isAuthenticated} />
     </Suspense>
   )
 }
