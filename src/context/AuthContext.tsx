@@ -3,6 +3,7 @@ import {
   createContext,
   useState,
   useCallback,
+  useEffect,
   type ReactNode,
 } from 'react'
 import * as authService from '../services/authService'
@@ -28,8 +29,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     authService.logout()
+    window.dispatchEvent(new Event('timer:session-ended'))
     setIsAuthenticated(false)
   }, [])
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      logout()
+    }
+
+    window.addEventListener('auth:session-expired', handleSessionExpired)
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired)
+  }, [logout])
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>

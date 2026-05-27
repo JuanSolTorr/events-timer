@@ -16,7 +16,7 @@ export function LoginView() {
   const [startPending, startTransition] = useTransition()
 
   useEffect(() => {
-    if (isAuthenticated) navigate('/login')
+    if (isAuthenticated) navigate('/', { replace: true })
   }, [isAuthenticated, navigate])
 
   const loginAction = useCallback(

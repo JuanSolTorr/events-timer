@@ -10,6 +10,8 @@ import type {
   LoginCredentials,
 } from '../types'
 
+type ApiLoginResponse = string | { response?: string; token?: string }
+
 type ApiSala = { idSala: number; nombreSala?: string; sala?: string }
 type ApiEmpresa = { idEmpresa: number; nombreEmpresa?: string; empresa?: string; imagen?: string; imagenEmpresa?: string }
 type ApiTimerEvento = {
@@ -73,14 +75,28 @@ function mapTimerEvento(data: ApiTimerEvento): TimerEvento {
 }
 
 function emitSyncData(): void {
+  window.dispatchEvent(new Event('timers:data-changed'))
   getSocket().emit('syncData')
+}
+
+function extractToken(data: ApiLoginResponse): string {
+  if (typeof data === 'string') {
+    return data
+  }
+
+  const token = data.response ?? data.token
+  if (typeof token === 'string' && token.length > 0) {
+    return token
+  }
+
+  throw new Error('Respuesta de autenticación inválida')
 }
 
 // ─── Autenticacion ────────────────────────────────────────────────────────────
 
 export async function generateToken(credentials: LoginCredentials): Promise<string> {
-  const { data } = await httpClient.post<string>('Auth/Login', credentials)
-  return data
+  const { data } = await httpClient.post<ApiLoginResponse>('Auth/Login', credentials)
+  return extractToken(data)
 }
 
 // ─── Salas ────────────────────────────────────────────────────────────────────
@@ -191,15 +207,20 @@ export async function updateIncreaseTimers(minutes: number): Promise<void> {
 
 export async function getTES(): Promise<TiempoEmpresaSala[]> {
   const { data } = await httpClient.get<TiempoEmpresaSala[]>('api/TiempoEmpresaSala')
-  return data
+  return data.map((tes) => ({
+    ...tes,
+    uniqueId: tes.uniqueId ?? tes.idTimer ?? tes.idEvento ?? 0,
+  }))
 }
 
 export async function postTES(tes: TiempoEmpresaSala): Promise<void> {
   await httpClient.post('api/TiempoEmpresaSala', tes)
+  emitSyncData()
 }
 
 export async function deleteTES(idTES: number): Promise<void> {
   await httpClient.delete(`api/TiempoEmpresaSala/${idTES}`)
+  emitSyncData()
 }
 
 // ─── TimerEventos (vista JOIN) ────────────────────────────────────────────────

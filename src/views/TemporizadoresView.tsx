@@ -4,7 +4,6 @@ import Swal from 'sweetalert2'
 import {
   getTemporizadores,
   getCategorias,
-  postTemporizador,
   putTemporizador,
   deleteTemporizador,
 } from '../services/service'

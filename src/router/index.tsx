@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { RootLayout } from '../components/RootLayout'
+import { ProtectedRoute } from '../components/ProtectedRoute'
 import { TimerView } from '../views/TimerView'
 import { LoginView } from '../views/LoginView'
 import { HorarioView } from '../views/HorarioView'
@@ -13,14 +14,19 @@ export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/', element: <TimerView /> },
       { path: '/login', element: <LoginView /> },
-      { path: '/horario',           element: <HorarioView /> },
-      { path: '/salas',             element: <SalasView /> },
-      { path: '/empresas',          element: <EmpresasView /> },
-      { path: '/categorias',        element: <CategoriasView /> },
-      { path: '/temporizadores',    element: <TemporizadoresView /> },
-      { path: '/empresastimersnew', element: <EmpresasEventoView /> },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          { index: true, element: <TimerView /> },
+          { path: 'horario', element: <HorarioView /> },
+          { path: 'salas', element: <SalasView /> },
+          { path: 'empresas', element: <EmpresasView /> },
+          { path: 'categorias', element: <CategoriasView /> },
+          { path: 'temporizadores', element: <TemporizadoresView /> },
+          { path: 'empresastimersnew', element: <EmpresasEventoView /> },
+        ],
+      },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

@@ -1,4 +1,4 @@
-import { Suspense, use, useEffect } from 'react'
+import { Suspense, use, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getSalas, getTimersEventos } from '../services/service'
 import { useTimerState } from '../hooks/useTimerState'
@@ -6,8 +6,7 @@ import { Tiempo } from '../components/Tiempo'
 import { parseTimerInicio } from '../utils/timezone'
 import type { Sala, TimerEvento } from '../types'
 
-const salasPromise = getSalas()
-const eventosPromise = getTimersEventos()
+const initialDataPromise = Promise.all([getSalas(), getTimersEventos()])
 
 function parseSalaParam(value: string | null): number | null {
   if (!value) return null
@@ -20,11 +19,12 @@ function sortByInicio(a: TimerEvento, b: TimerEvento): number {
 }
 
 function TimerContent() {
-  const salas = use(salasPromise)
-  const eventos = use(eventosPromise)
   const { currentTimerId, secondsRemaining, selectedSalaId, setSelectedSalaId } =
     useTimerState()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [dataPromise, setDataPromise] = useState(() => initialDataPromise)
+
+  const [salas, eventos] = use(dataPromise) as [Sala[], TimerEvento[]]
 
   const urlSalaId = parseSalaParam(searchParams.get('sala'))
   const fallbackSalaId = salas[0]?.idSala ?? null
@@ -42,6 +42,15 @@ function TimerContent() {
       setSearchParams({ sala: String(salaActiva) }, { replace: true })
     }
   }, [salaActiva, urlSalaId, setSearchParams])
+
+  useEffect(() => {
+    const refresh = () => {
+      setDataPromise(Promise.all([getSalas(), getTimersEventos()]))
+    }
+
+    window.addEventListener('timers:data-changed', refresh)
+    return () => window.removeEventListener('timers:data-changed', refresh)
+  }, [])
 
   const eventosSala = salaActiva ? eventos.filter((e) => e.idSala === salaActiva) : []
   const eventoActual = currentTimerId
